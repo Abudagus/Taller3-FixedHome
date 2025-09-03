@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FIXEDHOME - Inicio</title>
+
+  <!-- Bootstrap + Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    .sidebar { min-height: 100vh; }
+    .card-profile {
+      background-color: #1e1e1e;
+      color: white;
+      border: 1px solid #333;
+      transition: transform 0.2s;
+    }
+    .card-profile:hover {
+      transform: scale(1.05);
+    }
+    .profesional-img {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+    .loading {
+      text-align: center;
+      padding: 2rem;
+    }
+    .error {
+      color: #dc3545;
+      text-align: center;
+      padding: 2rem;
+    }
+  </style>
+</head>
+<body class="bg-dark text-white">
+
+<div class="container-fluid">
+  <div class="row g-0">
+
+    <!-- Sidebar -->
+    <aside class="col-12 col-md-3 col-lg-2 bg-black sidebar p-3">
+      <div class="d-flex align-items-center mb-4">
+        <img src="fixedhome.png" alt="Logo" style="width: 40px; height: 40px; margin-right: 10px;">
+        <h4 class="m-0">FIXEDHOME</h4>
+      </div>
+
+      <div class="d-grid gap-2">
+        <!-- Botones de autenticación (siempre visibles) -->
+        <a href="login.html" class="btn btn-outline-light">
+          <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+        </a>
+        
+        <div class="dropdown">
+          <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="bi bi-person-plus"></i> Registrarse
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="registro-profesional.html">
+              <i class="bi bi-briefcase"></i> Como Profesional
+            </a></li>
+            <li><a class="dropdown-item" href="registro-usuario.html">
+              <i class="bi bi-person"></i> Como Usuario
+            </a></li>
+          </ul>
+        </div>
+
+        <hr class="border-secondary">
+        
+        <!-- Botón "Ver Perfiles" solo visible cuando hay sesión activa -->
+        <div id="perfilSection" style="display: none;">
+          <a href="perfil-usuario.html" class="btn btn-outline-info">
+            <i class="bi bi-person-circle"></i> Ver Perfiles
+          </a>
+          <button class="btn btn-outline-warning mt-2" onclick="cerrarSesion()">
+            <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Contenido central -->
+    <main class="col-12 col-md-9 col-lg-10 p-4">
+      
+      <h2 class="mb-4">Profesionales disponibles</h2>
+      
+      <!-- Loading state -->
+      <div id="loading" class="loading">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="mt-2">Cargando profesionales...</p>
+      </div>
+
+      <!-- Error state -->
+      <div id="error" class="error" style="display: none;">
+        <i class="bi bi-exclamation-triangle-fill fs-1"></i>
+        <p>Error al cargar los profesionales. Intenta de nuevo.</p>
+        <button class="btn btn-primary" onclick="cargarProfesionales()">Reintentar</button>
+      </div>
+
+      <!-- Container para las tarjetas de profesionales -->
+      <div class="row" id="profesionales-container">
+        <!-- Aquí se cargarán dinámicamente las tarjetas -->
+      </div>
+    </main>
+
+  </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Tu archivo JavaScript -->
+<script src="main.js"></script>
+
+<script>
+// Función para verificar si hay sesión activa
+function verificarSesion() {
+  const tipoUsuario = localStorage.getItem('tipoUsuario');
+  const usuarioId = localStorage.getItem('usuarioId');
+  
+  if (tipoUsuario && usuarioId) {
+    // Hay sesión activa, mostrar botones de perfil
+    document.getElementById('perfilSection').style.display = 'block';
+  } else {
+    // No hay sesión, ocultar botones de perfil
+    document.getElementById('perfilSection').style.display = 'none';
+  }
+}
+
+// Función para cerrar sesión
+function cerrarSesion() {
+  // Limpiar localStorage
+  localStorage.removeItem('tipoUsuario');
+  localStorage.removeItem('usuarioId');
+  localStorage.removeItem('usuarioAlias');
+  localStorage.removeItem('usuarioNombre');
+  
+  // Ocultar botones de perfil
+  document.getElementById('perfilSection').style.display = 'none';
+  
+  // Redirigir al inicio
+  window.location.href = 'index.html';
+}
+
+// Verificar sesión cuando se carga la página
+document.addEventListener('DOMContentLoaded', function() {
+  verificarSesion();
+});
+</script>
+
+</body>
+</html>
