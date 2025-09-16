@@ -87,6 +87,27 @@
           </div>
         </div>
 
+        <div class="mb-3">
+          <label class="form-label">
+            <i class="bi bi-geo-alt-fill"></i> Barrios donde trabaja
+          </label>
+          <div class="border border-secondary rounded p-3 bg-dark" style="max-height: 200px; overflow-y: auto;">
+            <div class="row g-2" id="barriosContainer">
+              <!-- Los checkboxes se generarán dinámicamente -->
+            </div>
+          </div>
+          <div class="mt-2">
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="seleccionarTodosBarrios()">
+              <i class="bi bi-check-all"></i> Seleccionar Todos
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="deseleccionarTodosBarrios()">
+              <i class="bi bi-x-square"></i> Deseleccionar Todos
+            </button>
+            <span class="badge bg-info ms-2" id="barriosSeleccionados">0 barrios seleccionados</span>
+          </div>
+          <small class="text-muted">Marca todos los barrios donde trabajas. Puedes seleccionar múltiples barrios.</small>
+        </div>
+
         <div class="mb-4">
           <label class="form-label">Teléfono</label>
           <div class="input-group">
@@ -124,6 +145,88 @@
   const btnText = document.getElementById('btnText');
   const btnSpinner = document.getElementById('btnSpinner');
   
+  // Lista de barrios de Buenos Aires
+  const barrios = [
+    'Agronomía', 'Almagro', 'Balvanera', 'Barracas', 'Belgrano', 'Boedo', 'Caballito', 'Chacarita', 'Colegiales', 'Constitución',
+    'Flores', 'Floresta', 'La Boca', 'La Paternal', 'Liniers', 'Mataderos', 'Monserrat', 'Monte Castro', 'Nueva Pompeya', 'Núñez',
+    'Palermo', 'Parque Avellaneda', 'Parque Chacabuco', 'Parque Chas', 'Parque Patricios', 'Puerto Madero', 'Recoleta', 'Retiro',
+    'Saavedra', 'San Cristóbal', 'San Nicolás', 'San Telmo', 'Versalles', 'Villa Crespo', 'Villa del Parque', 'Villa Devoto',
+    'Villa General Mitre', 'Villa Lugano', 'Villa Luro', 'Villa Ortúzar', 'Villa Pueyrredón', 'Villa Real', 'Villa Riachuelo',
+    'Villa Santa Rita', 'Villa Soldati', 'Villa Urquiza', 'Vélez Sársfield'
+  ];
+  
+  // Generar checkboxes de barrios
+  function generarCheckboxesBarrios() {
+    const container = document.getElementById('barriosContainer');
+    const mitad = Math.ceil(barrios.length / 2);
+    
+    // Columna izquierda
+    const colIzq = document.createElement('div');
+    colIzq.className = 'col-md-6';
+    
+    // Columna derecha
+    const colDer = document.createElement('div');
+    colDer.className = 'col-md-6';
+    
+    barrios.forEach((barrio, index) => {
+      const formCheck = document.createElement('div');
+      formCheck.className = 'form-check';
+      
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.className = 'form-check-input';
+      checkbox.value = barrio;
+      checkbox.name = 'barrios';
+      checkbox.id = `barrio_${barrio.toLowerCase().replace(/\s+/g, '_').replace(/[áéíóúñ]/g, match => {
+        const map = { 'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u', 'ñ': 'n' };
+        return map[match];
+      })}`;
+      checkbox.addEventListener('change', actualizarContadorBarrios);
+      
+      const label = document.createElement('label');
+      label.className = 'form-check-label text-white';
+      label.htmlFor = checkbox.id;
+      label.textContent = barrio;
+      
+      formCheck.appendChild(checkbox);
+      formCheck.appendChild(label);
+      
+      if (index < mitad) {
+        colIzq.appendChild(formCheck);
+      } else {
+        colDer.appendChild(formCheck);
+      }
+    });
+    
+    container.appendChild(colIzq);
+    container.appendChild(colDer);
+  }
+  
+  // Actualizar contador de barrios seleccionados
+  function actualizarContadorBarrios() {
+    const seleccionados = document.querySelectorAll('input[name="barrios"]:checked').length;
+    document.getElementById('barriosSeleccionados').textContent = `${seleccionados} barrios seleccionados`;
+  }
+  
+  // Seleccionar todos los barrios
+  function seleccionarTodosBarrios() {
+    const checkboxes = document.querySelectorAll('input[name="barrios"]');
+    checkboxes.forEach(checkbox => checkbox.checked = true);
+    actualizarContadorBarrios();
+  }
+  
+  // Deseleccionar todos los barrios
+  function deseleccionarTodosBarrios() {
+    const checkboxes = document.querySelectorAll('input[name="barrios"]');
+    checkboxes.forEach(checkbox => checkbox.checked = false);
+    actualizarContadorBarrios();
+  }
+  
+  // Generar checkboxes cuando se carga la página
+  document.addEventListener('DOMContentLoaded', function() {
+    generarCheckboxesBarrios();
+  });
+  
   // Función para mostrar toast
   function mostrarToast(titulo, mensaje, tipo = 'success') {
     const toast = document.getElementById('toast');
@@ -158,6 +261,10 @@
     // Mostrar loading
     toggleLoading(true);
     
+    // Obtener barrios seleccionados
+    const barriosCheckboxes = document.querySelectorAll('input[name="barrios"]:checked');
+    const barriosSeleccionados = Array.from(barriosCheckboxes).map(checkbox => checkbox.value);
+    
     // Tomar los valores del formulario
     const data = {
       nombre: form.nombre.value.trim(),
@@ -168,12 +275,20 @@
       oficio: form.oficio.value.trim(),
       direccion: form.direccion.value.trim(),
       telefono: form.telefono.value.trim(),
+      barrios_trabajo: barriosSeleccionados,
       foto: "" // Por ahora vacío
     };
     
     // Validaciones básicas
     if (!data.nombre || !data.apellido || !data.documento || !data.alias || !data.password || !data.oficio || !data.direccion || !data.telefono) {
       mostrarToast('Error', 'Por favor completa todos los campos', 'error');
+      toggleLoading(false);
+      return;
+    }
+
+    // Validar que se hayan seleccionado barrios
+    if (barriosSeleccionados.length === 0) {
+      mostrarToast('Error', 'Debes seleccionar al menos un barrio donde trabajas', 'error');
       toggleLoading(false);
       return;
     }

@@ -61,13 +61,17 @@
 
         <hr class="border-secondary">
         
-        <a class="btn btn-outline-light" href="index.html">
-          <i class="bi bi-house"></i> Ver Profesionales
-        </a>
+        <button class="btn btn-outline-light" onclick="volverAProfesionales()">
+          <i class="bi bi-briefcase"></i> Ver Profesionales
+        </button>
         
-        <a class="btn btn-outline-light" href="registro-usuario.html">
-          <i class="bi bi-person-plus"></i> Registrar Usuario
-        </a>
+        <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalPublicarProblema">
+          <i class="bi bi-plus-circle"></i> Publicar Problema
+        </button>
+        
+        <button class="btn btn-outline-info" onclick="mostrarMisPublicaciones()">
+          <i class="bi bi-list-ul"></i> Mis Publicaciones
+        </button>
       </div>
     </aside>
 
@@ -79,6 +83,74 @@
           <button class="btn btn-outline-primary" onclick="cargarProfesionales()">
             <i class="bi bi-arrow-clockwise"></i> Actualizar
           </button>
+        </div>
+      </div>
+
+      <!-- Panel de búsqueda y filtros -->
+      <div class="card bg-dark border-secondary mb-4">
+        <div class="card-header bg-secondary">
+          <h5 class="mb-0">
+            <i class="bi bi-search"></i> Buscar y Filtrar Profesionales
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <!-- Búsqueda por oficio -->
+            <div class="col-md-6">
+              <label for="buscarOficio" class="form-label">
+                <i class="bi bi-briefcase"></i> Buscar por Oficio
+              </label>
+              <div class="input-group">
+                <input type="text" class="form-control" id="buscarOficio" 
+                       placeholder="Ej: plomero, electricista, carpintero..." 
+                       onkeyup="filtrarProfesionales()">
+                <button class="btn btn-outline-secondary" type="button" onclick="limpiarBusqueda()">
+                  <i class="bi bi-x-circle"></i>
+                </button>
+              </div>
+            </div>
+            
+            <!-- Filtro por barrio -->
+            <div class="col-md-6">
+              <label for="filtroBarrio" class="form-label">
+                <i class="bi bi-geo-alt"></i> Filtrar por Barrio
+              </label>
+              <select class="form-select" id="filtroBarrio" onchange="filtrarProfesionales()">
+                <option value="">Todos los barrios</option>
+                <!-- Las opciones se cargarán dinámicamente -->
+              </select>
+            </div>
+          </div>
+          
+          <!-- Botones de acción -->
+          <div class="row mt-3">
+            <div class="col-12">
+              <div class="d-flex gap-2">
+                <button class="btn btn-primary" onclick="aplicarFiltros()">
+                  <i class="bi bi-funnel"></i> Aplicar Filtros
+                </button>
+                <button class="btn btn-outline-secondary" onclick="limpiarFiltros()">
+                  <i class="bi bi-arrow-counterclockwise"></i> Limpiar Filtros
+                </button>
+                <span class="badge bg-info align-self-center ms-auto" id="resultadosContador">
+                  Mostrando todos los profesionales
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección Mis Publicaciones (inicialmente oculta) -->
+      <div id="seccionMisPublicaciones" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h2 class="m-0">
+            <i class="bi bi-list-ul"></i> Mis Publicaciones
+          </h2>
+        </div>
+        
+        <div id="misPublicacionesContainer">
+          <!-- Aquí se cargarán las publicaciones del usuario -->
         </div>
       </div>
 
@@ -107,7 +179,7 @@
             <div class="card-body text-center">
               <i class="bi bi-geo-alt-fill fs-1"></i>
               <h4 id="totalZonas">0</h4>
-              <p class="mb-0">Zonas de Trabajo</p>
+              <p class="mb-0">Barrios de Trabajo</p>
             </div>
           </div>
         </div>
@@ -137,56 +209,163 @@
   </div>
 </div>
 
+<!-- Modal para publicar problema -->
+<div class="modal fade" id="modalPublicarProblema" tabindex="-1" aria-labelledby="modalPublicarProblemaLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content bg-dark text-white">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalPublicarProblemaLabel">
+          <i class="bi bi-plus-circle"></i> Publicar Nuevo Problema
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formPublicarProblema">
+          <div class="row g-3">
+            <div class="col-12">
+              <label for="tituloProblema" class="form-label">
+                <i class="bi bi-card-heading"></i> Título del Problema
+              </label>
+              <input type="text" class="form-control" id="tituloProblema" required 
+                     placeholder="Ej: Problema con la instalación eléctrica">
+            </div>
+            
+            <div class="col-12">
+              <label for="descripcionProblema" class="form-label">
+                <i class="bi bi-text-paragraph"></i> Descripción Detallada
+              </label>
+              <textarea class="form-control" id="descripcionProblema" rows="4" required
+                        placeholder="Describe detalladamente el problema que necesitas resolver..."></textarea>
+            </div>
+            
+            <div class="col-md-6">
+              <label for="barrioProblema" class="form-label">
+                <i class="bi bi-geo-alt"></i> Barrio
+              </label>
+              <select class="form-select" id="barrioProblema" required>
+                <option value="">Selecciona un barrio</option>
+                <option value="Agronomía">Agronomía</option>
+                <option value="Almagro">Almagro</option>
+                <option value="Balvanera">Balvanera</option>
+                <option value="Barracas">Barracas</option>
+                <option value="Belgrano">Belgrano</option>
+                <option value="Boedo">Boedo</option>
+                <option value="Caballito">Caballito</option>
+                <option value="Chacarita">Chacarita</option>
+                <option value="Colegiales">Colegiales</option>
+                <option value="Constitución">Constitución</option>
+                <option value="Flores">Flores</option>
+                <option value="Floresta">Floresta</option>
+                <option value="La Boca">La Boca</option>
+                <option value="La Paternal">La Paternal</option>
+                <option value="Liniers">Liniers</option>
+                <option value="Mataderos">Mataderos</option>
+                <option value="Monserrat">Monserrat</option>
+                <option value="Monte Castro">Monte Castro</option>
+                <option value="Nueva Pompeya">Nueva Pompeya</option>
+                <option value="Núñez">Núñez</option>
+                <option value="Palermo">Palermo</option>
+                <option value="Parque Avellaneda">Parque Avellaneda</option>
+                <option value="Parque Chacabuco">Parque Chacabuco</option>
+                <option value="Parque Chas">Parque Chas</option>
+                <option value="Parque Patricios">Parque Patricios</option>
+                <option value="Puerto Madero">Puerto Madero</option>
+                <option value="Recoleta">Recoleta</option>
+                <option value="Retiro">Retiro</option>
+                <option value="Saavedra">Saavedra</option>
+                <option value="San Cristóbal">San Cristóbal</option>
+                <option value="San Nicolás">San Nicolás</option>
+                <option value="San Telmo">San Telmo</option>
+                <option value="Versalles">Versalles</option>
+                <option value="Villa Crespo">Villa Crespo</option>
+                <option value="Villa del Parque">Villa del Parque</option>
+                <option value="Villa Devoto">Villa Devoto</option>
+                <option value="Villa General Mitre">Villa General Mitre</option>
+                <option value="Villa Lugano">Villa Lugano</option>
+                <option value="Villa Luro">Villa Luro</option>
+                <option value="Villa Ortúzar">Villa Ortúzar</option>
+                <option value="Villa Pueyrredón">Villa Pueyrredón</option>
+                <option value="Villa Real">Villa Real</option>
+                <option value="Villa Riachuelo">Villa Riachuelo</option>
+                <option value="Villa Santa Rita">Villa Santa Rita</option>
+                <option value="Villa Soldati">Villa Soldati</option>
+                <option value="Villa Urquiza">Villa Urquiza</option>
+                <option value="Vélez Sársfield">Vélez Sársfield</option>
+              </select>
+            </div>
+            
+            <div class="col-md-6">
+              <label for="horariosProblema" class="form-label">
+                <i class="bi bi-clock"></i> Horarios Disponibles
+              </label>
+              <input type="text" class="form-control" id="horariosProblema" 
+                     placeholder="Ej: Lunes a Viernes de 9:00 a 18:00">
+            </div>
+            
+            <div class="col-12">
+              <label for="fotosProblema" class="form-label">
+                <i class="bi bi-camera"></i> Fotos del Problema (opcional)
+              </label>
+              <input type="file" class="form-control" id="fotosProblema" multiple accept="image/*">
+              <div class="form-text">Puedes subir hasta 5 fotos para mostrar el problema</div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-success" onclick="publicarProblema()">
+          <i class="bi bi-check-circle"></i> Publicar Problema
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal para ver mensajes de una publicación -->
+<div class="modal fade" id="modalVerMensajes" tabindex="-1" aria-labelledby="modalVerMensajesLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content bg-dark text-white">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalVerMensajesLabel">
+          <i class="bi bi-chat-dots"></i> Mensajes y Presupuestos
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="mensajesContainer">
+          <!-- Aquí se cargarán los mensajes -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para ampliar imágenes -->
+<div class="modal fade" id="modalAmpliarImagen" tabindex="-1" aria-labelledby="modalAmpliarImagenLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content bg-dark text-white">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalAmpliarImagenLabel">
+          <i class="bi bi-image"></i> Foto del Problema
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img id="imagenAmpliada" src="" alt="Foto del problema" class="img-fluid" style="max-height: 70vh;">
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-// Función para cargar profesionales desde la base de datos
-async function cargarProfesionales() {
-  const loading = document.getElementById('loading');
-  const error = document.getElementById('error');
-  const container = document.getElementById('profesionales-container');
-
-  try {
-    // Mostrar loading
-    loading.style.display = 'block';
-    error.style.display = 'none';
-    container.innerHTML = '';
-
-    // Hacer petición a la API
-    const response = await fetch('http://localhost:3000/profesionales');
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const profesionales = await response.json();
-    
-    // Ocultar loading
-    loading.style.display = 'none';
-    
-    if (profesionales.length === 0) {
-      container.innerHTML = `
-        <div class="col-12 text-center">
-          <div class="alert alert-info">
-            <i class="bi bi-info-circle-fill"></i>
-            No hay profesionales registrados aún.
-          </div>
-        </div>
-      `;
-      return;
-    }
-
-    // Mostrar profesionales
-    mostrarProfesionales(profesionales);
-    actualizarEstadisticas(profesionales);
-
-  } catch (err) {
-    console.error('Error al cargar profesionales:', err);
-    loading.style.display = 'none';
-    error.style.display = 'block';
-  }
-}
 
 // Función para mostrar los profesionales en tarjetas
 function mostrarProfesionales(profesionales) {
@@ -208,9 +387,30 @@ function mostrarProfesionales(profesionales) {
             <strong>Teléfono:</strong> ${profesional.telefono || 'No disponible'}<br>
             <strong>Registrado:</strong> ${new Date(profesional.fecha_registro).toLocaleDateString('es-ES')}
           </p>
+          <div class="mb-2">
+            <strong>Barrios donde trabaja:</strong><br>
+            <div class="d-flex flex-wrap gap-1 justify-content-center mt-1">
+              ${(() => {
+                let barriosProfesional = [];
+                if (profesional.barrios_trabajo) {
+                  if (typeof profesional.barrios_trabajo === 'string') {
+                    try {
+                      barriosProfesional = JSON.parse(profesional.barrios_trabajo);
+                    } catch (e) {
+                      barriosProfesional = [];
+                    }
+                  } else if (Array.isArray(profesional.barrios_trabajo)) {
+                    barriosProfesional = profesional.barrios_trabajo;
+                  }
+                }
+                return barriosProfesional.length > 0 
+                  ? barriosProfesional.map(barrio => `<span class="badge bg-success">${barrio}</span>`).join('')
+                  : '<span class="badge bg-secondary">No especificado</span>';
+              })()}
+            </div>
+          </div>
           <div class="d-flex gap-2 justify-content-center">
             <span class="badge bg-primary">${profesional.oficio}</span>
-            <span class="badge bg-info">${profesional.direccion.split(',')[0]}</span>
           </div>
           <div class="mt-3">
             <button class="btn btn-outline-primary btn-sm" onclick="contactarProfesional(${profesional.id})">
@@ -232,8 +432,24 @@ function actualizarEstadisticas(profesionales) {
   const oficiosUnicos = new Set(profesionales.map(p => p.oficio));
   document.getElementById('totalOficios').textContent = oficiosUnicos.size;
   
-  const zonasUnicas = new Set(profesionales.map(p => p.direccion.split(',')[0]));
-  document.getElementById('totalZonas').textContent = zonasUnicas.size;
+  // Contar barrios únicos donde trabajan los profesionales
+  const barriosUnicos = new Set();
+  profesionales.forEach(p => {
+    let barriosProfesional = [];
+    if (p.barrios_trabajo) {
+      if (typeof p.barrios_trabajo === 'string') {
+        try {
+          barriosProfesional = JSON.parse(p.barrios_trabajo);
+        } catch (e) {
+          barriosProfesional = [];
+        }
+      } else if (Array.isArray(p.barrios_trabajo)) {
+        barriosProfesional = p.barrios_trabajo;
+      }
+    }
+    barriosProfesional.forEach(barrio => barriosUnicos.add(barrio));
+  });
+  document.getElementById('totalZonas').textContent = barriosUnicos.size;
 }
 
 // Función para contactar a un profesional
@@ -241,12 +457,707 @@ function contactarProfesional(id) {
   alert(`Función de contacto para el profesional ID: ${id}\nEsta funcionalidad se puede implementar más adelante.`);
 }
 
+// Variables globales para almacenar datos
+let todosLosProfesionales = [];
+let profesionalesFiltrados = [];
+
+// Función para cargar opciones de barrios
+async function cargarOpcionesBarrios() {
+  try {
+    const response = await fetch('http://localhost:3000/profesionales/barrios');
+    const barrios = await response.json();
+    
+    const selectBarrio = document.getElementById('filtroBarrio');
+    
+    // Limpiar opciones existentes (excepto la primera)
+    selectBarrio.innerHTML = '<option value="">Todos los barrios</option>';
+    
+    // Agregar opciones de barrios
+    barrios.forEach(barrio => {
+      const option = document.createElement('option');
+      option.value = barrio;
+      option.textContent = barrio;
+      selectBarrio.appendChild(option);
+    });
+  } catch (error) {
+    console.error('Error al cargar barrios:', error);
+  }
+}
+
+// Función para filtrar profesionales
+function filtrarProfesionales() {
+  const busquedaOficio = document.getElementById('buscarOficio').value.toLowerCase().trim();
+  const filtroBarrio = document.getElementById('filtroBarrio').value;
+  
+  console.log('Filtrando con:', { busquedaOficio, filtroBarrio });
+  
+  profesionalesFiltrados = todosLosProfesionales.filter(profesional => {
+    const coincideOficio = !busquedaOficio || 
+      profesional.oficio.toLowerCase().includes(busquedaOficio);
+    
+    // Manejar diferentes tipos de barrios_trabajo
+    let barriosProfesional = [];
+    if (profesional.barrios_trabajo) {
+      if (typeof profesional.barrios_trabajo === 'string') {
+        try {
+          barriosProfesional = JSON.parse(profesional.barrios_trabajo);
+        } catch (e) {
+          console.warn('Error parseando barrios_trabajo:', profesional.barrios_trabajo);
+          barriosProfesional = [];
+        }
+      } else if (Array.isArray(profesional.barrios_trabajo)) {
+        barriosProfesional = profesional.barrios_trabajo;
+      }
+    }
+    
+    const coincideBarrio = !filtroBarrio || 
+      (barriosProfesional.length > 0 && barriosProfesional.includes(filtroBarrio));
+    
+    console.log(`Profesional ${profesional.nombre}:`, {
+      barrios_trabajo: profesional.barrios_trabajo,
+      barriosProfesional,
+      coincideOficio,
+      coincideBarrio,
+      resultado: coincideOficio && coincideBarrio
+    });
+    
+    return coincideOficio && coincideBarrio;
+  });
+  
+  console.log('Profesionales filtrados:', profesionalesFiltrados.length);
+  
+  // Mostrar resultados filtrados
+  mostrarProfesionales(profesionalesFiltrados);
+  actualizarContadorResultados();
+}
+
+// Función para aplicar filtros (botón)
+function aplicarFiltros() {
+  filtrarProfesionales();
+}
+
+// Función para limpiar filtros
+function limpiarFiltros() {
+  document.getElementById('buscarOficio').value = '';
+  document.getElementById('filtroBarrio').value = '';
+  profesionalesFiltrados = [...todosLosProfesionales];
+  mostrarProfesionales(profesionalesFiltrados);
+  actualizarContadorResultados();
+}
+
+// Función para limpiar solo la búsqueda
+function limpiarBusqueda() {
+  document.getElementById('buscarOficio').value = '';
+  filtrarProfesionales();
+}
+
+// Función para actualizar contador de resultados
+function actualizarContadorResultados() {
+  const contador = document.getElementById('resultadosContador');
+  const total = todosLosProfesionales.length;
+  const filtrados = profesionalesFiltrados.length;
+  
+  if (filtrados === total) {
+    contador.textContent = `Mostrando todos los ${total} profesionales`;
+    contador.className = 'badge bg-success align-self-center ms-auto';
+  } else {
+    contador.textContent = `Mostrando ${filtrados} de ${total} profesionales`;
+    contador.className = 'badge bg-warning align-self-center ms-auto';
+  }
+}
+
+// Función modificada para cargar profesionales
+async function cargarProfesionales() {
+  const loading = document.getElementById('loading');
+  const error = document.getElementById('error');
+  const container = document.getElementById('profesionales-container');
+
+  try {
+    // Mostrar loading
+    loading.style.display = 'block';
+    error.style.display = 'none';
+    container.innerHTML = '';
+
+    // Hacer petición a la API
+    const response = await fetch('http://localhost:3000/profesionales');
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const profesionales = await response.json();
+    
+    // Debug: Ver qué datos llegan del backend
+    console.log('Profesionales recibidos:', profesionales);
+    profesionales.forEach((prof, index) => {
+      console.log(`Profesional ${index + 1}:`, {
+        nombre: prof.nombre,
+        barrios_trabajo: prof.barrios_trabajo,
+        tipo_barrios: typeof prof.barrios_trabajo
+      });
+    });
+    
+    // Almacenar todos los profesionales
+    todosLosProfesionales = profesionales;
+    profesionalesFiltrados = [...profesionales];
+    
+    // Ocultar loading
+    loading.style.display = 'none';
+    
+    if (profesionales.length === 0) {
+      container.innerHTML = `
+        <div class="col-12 text-center">
+          <div class="alert alert-info">
+            <i class="bi bi-info-circle-fill"></i>
+            No hay profesionales registrados aún.
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    // Cargar opciones de barrios
+    cargarOpcionesBarrios();
+    
+    // Mostrar profesionales
+    mostrarProfesionales(profesionales);
+    actualizarEstadisticas(profesionales);
+    actualizarContadorResultados();
+
+  } catch (err) {
+    console.error('Error al cargar profesionales:', err);
+    loading.style.display = 'none';
+    error.style.display = 'block';
+  }
+}
+
+// Función para verificar si el usuario está logueado como usuario (no profesional)
+function verificarSesionUsuario() {
+  const tipoUsuario = localStorage.getItem('tipoUsuario');
+  const usuarioId = localStorage.getItem('usuarioId');
+  
+  if (!tipoUsuario || !usuarioId) {
+    // No hay sesión activa, redirigir al login
+    alert('Debes iniciar sesión como usuario para acceder a esta página.');
+    window.location.href = 'login.html';
+    return false;
+  }
+  
+  if (tipoUsuario !== 'usuario') {
+    // El usuario logueado no es un usuario, sino un profesional
+    alert('Esta página es solo para usuarios. Los profesionales deben acceder a su área correspondiente.');
+    window.location.href = 'perfil-profesional.html';
+    return false;
+  }
+  
+  return true;
+}
+
+// Función para mostrar información del usuario logueado
+function mostrarInfoUsuario() {
+  const usuarioNombre = localStorage.getItem('usuarioNombre');
+  const usuarioAlias = localStorage.getItem('usuarioAlias');
+  
+  if (usuarioNombre && usuarioAlias) {
+    // Actualizar el sidebar con información del usuario
+    const sidebarInfo = document.querySelector('.sidebar .text-center');
+    if (sidebarInfo) {
+      sidebarInfo.innerHTML = `
+        <i class="bi bi-person-circle fs-1 text-primary"></i>
+        <p class="mb-0 mt-2">Bienvenido, ${usuarioNombre}</p>
+        <small class="text-muted">@${usuarioAlias}</small>
+      `;
+    }
+    
+    // Agregar botón de cerrar sesión
+    const sidebarButtons = document.querySelector('.sidebar .d-grid');
+    if (sidebarButtons && !document.getElementById('cerrarSesionBtn')) {
+      const cerrarSesionBtn = document.createElement('button');
+      cerrarSesionBtn.id = 'cerrarSesionBtn';
+      cerrarSesionBtn.className = 'btn btn-outline-danger mt-3';
+      cerrarSesionBtn.innerHTML = '<i class="bi bi-box-arrow-right"></i> Cerrar Sesión';
+      cerrarSesionBtn.onclick = cerrarSesion;
+      sidebarButtons.appendChild(cerrarSesionBtn);
+    }
+  }
+}
+
+// Función para cerrar sesión
+function cerrarSesion() {
+  if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+    // Limpiar localStorage
+    localStorage.removeItem('tipoUsuario');
+    localStorage.removeItem('usuarioId');
+    localStorage.removeItem('usuarioAlias');
+    localStorage.removeItem('usuarioNombre');
+    
+    // Redirigir al inicio
+    window.location.href = 'index.html';
+  }
+}
+
+// ===== FUNCIONES PARA PUBLICACIONES =====
+
+// Función para publicar un problema
+async function publicarProblema() {
+  const titulo = document.getElementById('tituloProblema').value.trim();
+  const descripcion = document.getElementById('descripcionProblema').value.trim();
+  const barrio = document.getElementById('barrioProblema').value;
+  const horarios = document.getElementById('horariosProblema').value.trim();
+  const fotosInput = document.getElementById('fotosProblema');
+  
+  // Validaciones
+  if (!titulo || !descripcion || !barrio) {
+    alert('Por favor completa todos los campos obligatorios (título, descripción y barrio).');
+    return;
+  }
+  
+  const usuarioId = localStorage.getItem('usuarioId');
+  if (!usuarioId) {
+    alert('Error: No se encontró la sesión del usuario.');
+    return;
+  }
+  
+  try {
+    // Procesar fotos si se seleccionaron
+    let fotosArray = [];
+    if (fotosInput.files.length > 0) {
+      // Por ahora solo guardamos los nombres de archivo
+      // En una implementación real, subirías las fotos al servidor
+      for (let i = 0; i < Math.min(fotosInput.files.length, 5); i++) {
+        const file = fotosInput.files[i];
+        // Simulamos la URL de la foto subida
+        fotosArray.push(`uploads/${Date.now()}_${file.name}`);
+      }
+    }
+    
+    // Preparar datos
+    const datosPublicacion = {
+      usuario_id: parseInt(usuarioId),
+      titulo: titulo,
+      descripcion: descripcion,
+      barrio: barrio,
+      horarios_disponibles: horarios || null,
+      fotos: fotosArray
+    };
+    
+    // Enviar al backend
+    const response = await fetch('http://localhost:3000/publicaciones', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(datosPublicacion)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Error al publicar el problema');
+    }
+    
+    const resultado = await response.json();
+    
+    // Mostrar éxito
+    alert('¡Problema publicado exitosamente!');
+    
+    // Limpiar formulario
+    document.getElementById('formPublicarProblema').reset();
+    
+    // Cerrar modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalPublicarProblema'));
+    modal.hide();
+    
+    // Si estamos viendo mis publicaciones, recargarlas
+    if (document.getElementById('seccionMisPublicaciones').style.display !== 'none') {
+      cargarMisPublicaciones();
+    }
+    
+  } catch (error) {
+    console.error('Error al publicar problema:', error);
+    alert('Error al publicar el problema: ' + error.message);
+  }
+}
+
+// Función para mostrar la sección de mis publicaciones
+function mostrarMisPublicaciones() {
+  // Ocultar todas las secciones del main
+  const secciones = document.querySelectorAll('main > div');
+  secciones.forEach(seccion => {
+    if (seccion.id !== 'seccionMisPublicaciones') {
+      seccion.style.display = 'none';
+    }
+  });
+  
+  // Mostrar sección de publicaciones
+  const seccionPublicaciones = document.getElementById('seccionMisPublicaciones');
+  seccionPublicaciones.style.display = 'block';
+  
+  // Cargar publicaciones
+  cargarMisPublicaciones();
+}
+
+// Función para volver a la vista de profesionales
+function volverAProfesionales() {
+  // Mostrar todas las secciones del main excepto la de publicaciones
+  const secciones = document.querySelectorAll('main > div');
+  secciones.forEach(seccion => {
+    if (seccion.id !== 'seccionMisPublicaciones') {
+      seccion.style.display = 'block';
+    }
+  });
+  
+  // Ocultar sección de publicaciones
+  const seccionPublicaciones = document.getElementById('seccionMisPublicaciones');
+  seccionPublicaciones.style.display = 'none';
+  
+  // Recargar profesionales para asegurar que estén actualizados
+  if (typeof cargarProfesionales === 'function') {
+    cargarProfesionales();
+  }
+}
+
+// Función para cargar las publicaciones del usuario
+async function cargarMisPublicaciones() {
+  const usuarioId = localStorage.getItem('usuarioId');
+  if (!usuarioId) {
+    alert('Error: No se encontró la sesión del usuario.');
+    return;
+  }
+  
+  try {
+    const response = await fetch(`http://localhost:3000/publicaciones/usuario/${usuarioId}`);
+    
+    if (!response.ok) {
+      throw new Error('Error al cargar las publicaciones');
+    }
+    
+    const publicaciones = await response.json();
+    mostrarMisPublicacionesHTML(publicaciones);
+    
+  } catch (error) {
+    console.error('Error al cargar publicaciones:', error);
+    document.getElementById('misPublicacionesContainer').innerHTML = `
+      <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        Error al cargar las publicaciones: ${error.message}
+      </div>
+    `;
+  }
+}
+
+// Función para mostrar las publicaciones en HTML
+function mostrarMisPublicacionesHTML(publicaciones) {
+  const container = document.getElementById('misPublicacionesContainer');
+  
+  if (publicaciones.length === 0) {
+    container.innerHTML = `
+      <div class="alert alert-info">
+        <i class="bi bi-info-circle-fill"></i>
+        No tienes publicaciones aún. ¡Publica tu primer problema!
+      </div>
+    `;
+    return;
+  }
+  
+  const html = publicaciones.map(publicacion => `
+    <div class="col-12 mb-4">
+      <div class="card bg-dark border-secondary">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">${publicacion.titulo}</h5>
+          <span class="badge ${getBadgeClassForEstado(publicacion.estado)}">${getEstadoText(publicacion.estado)}</span>
+        </div>
+        <div class="card-body">
+          <p class="card-text">${publicacion.descripcion}</p>
+          
+          <!-- Mostrar fotos si existen -->
+          ${(() => {
+            let fotos = [];
+            if (publicacion.fotos) {
+              if (typeof publicacion.fotos === 'string') {
+                try {
+                  fotos = JSON.parse(publicacion.fotos);
+                } catch (e) {
+                  fotos = [];
+                }
+              } else if (Array.isArray(publicacion.fotos)) {
+                fotos = publicacion.fotos;
+              }
+            }
+            
+            if (fotos.length > 0) {
+              return `
+                <div class="mt-3">
+                  <strong><i class="bi bi-camera"></i> Fotos del problema:</strong>
+                  <div class="d-flex flex-wrap gap-2 mt-2">
+                    ${fotos.map(foto => `
+                      <img src="${foto}" alt="Foto del problema" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover; cursor: pointer;" 
+                           onerror="this.style.display='none'" onclick="ampliarImagen('${foto}')">
+                    `).join('')}
+                  </div>
+                </div>
+              `;
+            }
+            return '';
+          })()}
+          
+          <div class="row mt-3">
+            <div class="col-md-6">
+              <strong><i class="bi bi-geo-alt"></i> Barrio:</strong> ${publicacion.barrio}
+            </div>
+            <div class="col-md-6">
+              <strong><i class="bi bi-clock"></i> Horarios:</strong> ${publicacion.horarios_disponibles || 'No especificado'}
+            </div>
+          </div>
+          <div class="mt-2">
+            <small class="text-muted">
+              <i class="bi bi-calendar"></i> Publicado: ${new Date(publicacion.fecha_publicacion).toLocaleDateString('es-ES')}
+              ${publicacion.fecha_actualizacion ? ` | <i class="bi bi-arrow-clockwise"></i> Actualizado: ${new Date(publicacion.fecha_actualizacion).toLocaleDateString('es-ES')}` : ''}
+            </small>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary btn-sm" onclick="editarPublicacion(${publicacion.id})">
+              <i class="bi bi-pencil"></i> Editar
+            </button>
+            <button class="btn btn-outline-info btn-sm" onclick="verMensajesPublicacion(${publicacion.id})">
+              <i class="bi bi-chat-dots"></i> Ver Mensajes
+            </button>
+            <button class="btn btn-outline-danger btn-sm" onclick="eliminarPublicacion(${publicacion.id})">
+              <i class="bi bi-trash"></i> Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  
+  container.innerHTML = `
+    <div class="row">
+      ${html}
+    </div>
+    <div class="mt-3">
+      <button class="btn btn-outline-secondary" onclick="volverAProfesionales()">
+        <i class="bi bi-arrow-left"></i> Volver a Profesionales
+      </button>
+    </div>
+  `;
+}
+
+// Función auxiliar para obtener la clase del badge según el estado
+function getBadgeClassForEstado(estado) {
+  switch (estado) {
+    case 'activa': return 'bg-success';
+    case 'en_proceso': return 'bg-warning';
+    case 'resuelta': return 'bg-info';
+    case 'cancelada': return 'bg-danger';
+    default: return 'bg-secondary';
+  }
+}
+
+// Función auxiliar para obtener el texto del estado
+function getEstadoText(estado) {
+  switch (estado) {
+    case 'activa': return 'Activa';
+    case 'en_proceso': return 'En Proceso';
+    case 'resuelta': return 'Resuelta';
+    case 'cancelada': return 'Cancelada';
+    default: return estado;
+  }
+}
+
+// Función para editar una publicacion (placeholder)
+function editarPublicacion(id) {
+  alert(`Función de edición para la publicación ID: ${id}\nEsta funcionalidad se puede implementar más adelante.`);
+}
+
+// Función para eliminar una publicacion
+async function eliminarPublicacion(id) {
+  if (!confirm('¿Estás seguro de que quieres eliminar esta publicación?')) {
+    return;
+  }
+  
+  try {
+    const response = await fetch(`http://localhost:3000/publicaciones/${id}`, {
+      method: 'DELETE'
+    });
+    
+    if (!response.ok) {
+      throw new Error('Error al eliminar la publicación');
+    }
+    
+    alert('Publicación eliminada exitosamente');
+    cargarMisPublicaciones(); // Recargar la lista
+    
+  } catch (error) {
+    console.error('Error al eliminar publicación:', error);
+    alert('Error al eliminar la publicación: ' + error.message);
+  }
+}
+
+// ===== FUNCIONES PARA MENSAJES =====
+
+// Función para ver mensajes de una publicación
+async function verMensajesPublicacion(publicacionId) {
+  try {
+    const response = await fetch(`http://localhost:3000/mensajes/publicacion/${publicacionId}`);
+    
+    if (!response.ok) {
+      throw new Error('Error al cargar los mensajes');
+    }
+    
+    const mensajes = await response.json();
+    mostrarMensajesEnModal(mensajes);
+    
+    // Abrir modal
+    const modal = new bootstrap.Modal(document.getElementById('modalVerMensajes'));
+    modal.show();
+    
+  } catch (error) {
+    console.error('Error al cargar mensajes:', error);
+    alert('Error al cargar los mensajes: ' + error.message);
+  }
+}
+
+// Función para mostrar mensajes en el modal
+function mostrarMensajesEnModal(mensajes) {
+  const container = document.getElementById('mensajesContainer');
+  
+  if (mensajes.length === 0) {
+    container.innerHTML = `
+      <div class="alert alert-info">
+        <i class="bi bi-info-circle-fill"></i>
+        No hay mensajes para esta publicación aún.
+      </div>
+    `;
+    return;
+  }
+  
+  const html = mensajes.map(mensaje => `
+    <div class="card bg-secondary mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+          <h6 class="mb-0">
+            <i class="bi bi-person-badge"></i> ${mensaje.profesional_nombre} ${mensaje.profesional_apellido}
+          </h6>
+          <small class="text-muted">${mensaje.profesional_oficio}</small>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+          <span class="badge ${getBadgeClassForEstadoMensaje(mensaje.estado)}">${getEstadoTextMensaje(mensaje.estado)}</span>
+          ${mensaje.presupuesto ? `<span class="badge bg-success">$${mensaje.presupuesto.toLocaleString('es-AR')}</span>` : ''}
+        </div>
+      </div>
+      <div class="card-body">
+        <p class="card-text">${mensaje.mensaje}</p>
+        ${mensaje.presupuesto ? `
+          <div class="alert alert-success">
+            <strong><i class="bi bi-currency-dollar"></i> Presupuesto:</strong> $${mensaje.presupuesto.toLocaleString('es-AR')}
+          </div>
+        ` : ''}
+        <div class="row">
+          <div class="col-md-6">
+            <small class="text-muted">
+              <i class="bi bi-calendar"></i> Enviado: ${new Date(mensaje.fecha_envio).toLocaleDateString('es-ES')} ${new Date(mensaje.fecha_envio).toLocaleTimeString('es-ES')}
+            </small>
+          </div>
+          <div class="col-md-6">
+            <small class="text-muted">
+              <i class="bi bi-telephone"></i> Teléfono: ${mensaje.profesional_telefono || 'No disponible'}
+            </small>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="d-flex gap-2">
+          ${mensaje.estado === 'enviado' ? `
+            <button class="btn btn-success btn-sm" onclick="responderMensaje(${mensaje.id}, 'aceptado')">
+              <i class="bi bi-check-circle"></i> Aceptar Presupuesto
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="responderMensaje(${mensaje.id}, 'rechazado')">
+              <i class="bi bi-x-circle"></i> Rechazar Presupuesto
+            </button>
+          ` : `
+            <span class="text-muted">Ya respondiste a este mensaje</span>
+          `}
+        </div>
+      </div>
+    </div>
+  `).join('');
+  
+  container.innerHTML = html;
+}
+
+// Función para responder a un mensaje (aceptar/rechazar presupuesto)
+async function responderMensaje(mensajeId, respuesta) {
+  const accion = respuesta === 'aceptado' ? 'aceptar' : 'rechazar';
+  
+  if (!confirm(`¿Estás seguro de que quieres ${accion} este presupuesto?`)) {
+    return;
+  }
+  
+  try {
+    const response = await fetch(`http://localhost:3000/mensajes/${mensajeId}/estado`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ estado: respuesta })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Error al responder al mensaje');
+    }
+    
+    alert(`Presupuesto ${accion}do exitosamente`);
+    
+    // Recargar mensajes
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalVerMensajes'));
+    modal.hide();
+    
+  } catch (error) {
+    console.error('Error al responder mensaje:', error);
+    alert('Error al responder al mensaje: ' + error.message);
+  }
+}
+
+// Funciones auxiliares para badges de mensajes
+function getBadgeClassForEstadoMensaje(estado) {
+  switch (estado) {
+    case 'enviado': return 'bg-primary';
+    case 'leido': return 'bg-info';
+    case 'aceptado': return 'bg-success';
+    case 'rechazado': return 'bg-danger';
+    default: return 'bg-secondary';
+  }
+}
+
+function getEstadoTextMensaje(estado) {
+  switch (estado) {
+    case 'enviado': return 'Enviado';
+    case 'leido': return 'Leído';
+    case 'aceptado': return 'Aceptado';
+    case 'rechazado': return 'Rechazado';
+    default: return estado;
+  }
+}
+
+// Función para ampliar imagen
+function ampliarImagen(src) {
+  document.getElementById('imagenAmpliada').src = src;
+  const modal = new bootstrap.Modal(document.getElementById('modalAmpliarImagen'));
+  modal.show();
+}
+
 // Cargar profesionales cuando la página se carga
 document.addEventListener('DOMContentLoaded', function() {
-  cargarProfesionales();
-  
-  // Recargar profesionales cada 30 segundos (opcional)
-  setInterval(cargarProfesionales, 30000);
+  // Verificar sesión antes de cargar contenido
+  if (verificarSesionUsuario()) {
+    mostrarInfoUsuario();
+    cargarProfesionales();
+    
+    // Recargar profesionales cada 30 segundos (opcional)
+    setInterval(cargarProfesionales, 30000);
+  }
 });
 </script>
 

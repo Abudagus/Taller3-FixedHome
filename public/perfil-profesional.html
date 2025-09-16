@@ -32,6 +32,23 @@
     .card-profile:hover {
       transform: scale(1.02);
     }
+    .card-trabajo {
+      background-color: #2d2d2d;
+      color: white;
+      border: 1px solid #444;
+      transition: transform 0.2s;
+      height: 100%;
+    }
+    .card-trabajo:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    }
+    .trabajo-img {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
   </style>
 </head>
 <body class="bg-dark text-white">
@@ -59,8 +76,8 @@
           <i class="bi bi-pencil"></i> Editar Perfil
         </button>
         
-        <button class="btn btn-outline-success" onclick="verSolicitudes()">
-          <i class="bi bi-list-check"></i> Ver Solicitudes
+        <button class="btn btn-outline-success" onclick="verPublicaciones()">
+          <i class="bi bi-list-check"></i> Ver Publicaciones
         </button>
         
         <button class="btn btn-outline-info" onclick="configuracion()">
@@ -90,6 +107,44 @@
         </div>
         <h2 id="profileName">Cargando...</h2>
         <p class="mb-0" id="profileOficio">Cargando...</p>
+      </div>
+
+      <!-- Sección de Seguimiento de Trabajos -->
+      <div class="mb-4">
+        <h3 class="mb-3">
+          <i class="bi bi-clipboard-check text-success"></i> 
+          Trabajos en Seguimiento
+        </h3>
+        <p class="text-muted mb-4">
+          <i class="bi bi-info-circle"></i> 
+          Publicaciones que has aceptado y están en progreso.
+        </p>
+        
+        <!-- Loading state para trabajos -->
+        <div id="loadingTrabajos" class="text-center">
+          <div class="spinner-border text-success" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+          <p class="mt-2">Cargando trabajos...</p>
+        </div>
+
+        <!-- Error state para trabajos -->
+        <div id="errorTrabajos" class="alert alert-danger" style="display: none;">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          Error al cargar los trabajos. Intenta de nuevo.
+        </div>
+
+        <!-- Container para las tarjetas de trabajos -->
+        <div class="row" id="trabajosContainer">
+          <!-- Aquí se cargarán dinámicamente las tarjetas -->
+        </div>
+        
+        <!-- Mensaje si no hay trabajos -->
+        <div id="sinTrabajos" class="alert alert-info" style="display: none;">
+          <i class="bi bi-info-circle-fill"></i>
+          No tienes trabajos en seguimiento en este momento. 
+          <a href="#" onclick="verPublicaciones()" class="alert-link">Ver publicaciones disponibles</a> para encontrar nuevos trabajos.
+        </div>
       </div>
 
       <!-- Mensaje de bienvenida -->
@@ -180,8 +235,130 @@
           </div>
         </div>
       </div>
+
+      <!-- Sección de Publicaciones (inicialmente oculta) -->
+      <div id="seccionPublicaciones" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h2 class="m-0">
+            <i class="bi bi-list-check"></i> Publicaciones de Usuarios
+          </h2>
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary" onclick="cargarPublicaciones()">
+              <i class="bi bi-arrow-clockwise"></i> Actualizar
+            </button>
+            <button class="btn btn-outline-secondary" onclick="volverAlPerfil()">
+              <i class="bi bi-arrow-left"></i> Volver al Perfil
+            </button>
+          </div>
+        </div>
+
+        <!-- Filtros para publicaciones -->
+        <div class="card bg-dark border-secondary mb-4">
+          <div class="card-header bg-secondary">
+            <h5 class="mb-0">
+              <i class="bi bi-funnel"></i> Filtrar Publicaciones
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label for="filtroBarrioPublicaciones" class="form-label">
+                  <i class="bi bi-geo-alt"></i> Barrio
+                </label>
+                <select class="form-select" id="filtroBarrioPublicaciones" onchange="filtrarPublicaciones()">
+                  <option value="">Todos los barrios</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label for="filtroEstadoPublicaciones" class="form-label">
+                  <i class="bi bi-check-circle"></i> Estado
+                </label>
+                <select class="form-select" id="filtroEstadoPublicaciones" onchange="filtrarPublicaciones()">
+                  <option value="">Todos los estados</option>
+                  <option value="activa">Activa</option>
+                  <option value="en_proceso">En Proceso</option>
+                  <option value="resuelta">Resuelta</option>
+                  <option value="cancelada">Cancelada</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label for="buscarPublicaciones" class="form-label">
+                  <i class="bi bi-search"></i> Buscar
+                </label>
+                <input type="text" class="form-control" id="buscarPublicaciones" 
+                       placeholder="Buscar por título..." onkeyup="filtrarPublicaciones()">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="publicacionesContainer">
+          <!-- Aquí se cargarán las publicaciones -->
+        </div>
+      </div>
     </main>
 
+  </div>
+</div>
+
+<!-- Modal para ver detalles de publicación y enviar presupuesto -->
+<div class="modal fade" id="modalVerPublicacion" tabindex="-1" aria-labelledby="modalVerPublicacionLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content bg-dark text-white">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalVerPublicacionLabel">
+          <i class="bi bi-eye"></i> Detalles de la Publicación
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="detallesPublicacion">
+          <!-- Aquí se cargarán los detalles de la publicación -->
+        </div>
+        
+        <hr class="border-secondary">
+        
+        <h6><i class="bi bi-chat-dots"></i> Enviar Presupuesto</h6>
+        <form id="formEnviarPresupuesto">
+          <div class="mb-3">
+            <label for="mensajePresupuesto" class="form-label">Mensaje</label>
+            <textarea class="form-control" id="mensajePresupuesto" rows="4" required
+                      placeholder="Escribe tu mensaje y propuesta de trabajo..."></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="montoPresupuesto" class="form-label">Presupuesto (ARS)</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="number" class="form-control" id="montoPresupuesto" 
+                     step="0.01" min="0" required placeholder="0.00">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-success" onclick="enviarPresupuesto()">
+          <i class="bi bi-send"></i> Enviar Presupuesto
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para ampliar imágenes -->
+<div class="modal fade" id="modalAmpliarImagen" tabindex="-1" aria-labelledby="modalAmpliarImagenLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content bg-dark text-white">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalAmpliarImagenLabel">
+          <i class="bi bi-image"></i> Foto del Problema
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img id="imagenAmpliada" src="" alt="Foto del problema" class="img-fluid" style="max-height: 70vh;">
+      </div>
+    </div>
   </div>
 </div>
 
@@ -258,11 +435,377 @@ function ocultarEdicion() {
   document.getElementById('edicionPerfil').style.display = 'none';
 }
 
-// Funciones de acciones (placeholder)
-function verSolicitudes() {
-  alert('Función de ver solicitudes - Se implementará más adelante');
+// ===== FUNCIONES PARA PUBLICACIONES =====
+
+// Variables globales para publicaciones
+let todasLasPublicaciones = [];
+let publicacionesFiltradas = [];
+let publicacionSeleccionada = null;
+
+// Función para ver publicaciones
+function verPublicaciones() {
+  const seccionPerfil = document.querySelector('main > div:not(#seccionPublicaciones)');
+  const seccionPublicaciones = document.getElementById('seccionPublicaciones');
+  
+  // Ocultar sección del perfil
+  seccionPerfil.style.display = 'none';
+  
+  // Mostrar sección de publicaciones
+  seccionPublicaciones.style.display = 'block';
+  
+  // Cargar publicaciones
+  cargarPublicaciones();
 }
 
+// Función para volver al perfil
+function volverAlPerfil() {
+  const seccionPerfil = document.querySelector('main > div:not(#seccionPublicaciones)');
+  const seccionPublicaciones = document.getElementById('seccionPublicaciones');
+  
+  // Mostrar sección del perfil
+  seccionPerfil.style.display = 'block';
+  
+  // Ocultar sección de publicaciones
+  seccionPublicaciones.style.display = 'none';
+}
+
+// Función para cargar publicaciones
+async function cargarPublicaciones() {
+  try {
+    const response = await fetch('http://localhost:3000/publicaciones');
+    
+    if (!response.ok) {
+      throw new Error('Error al cargar publicaciones');
+    }
+    
+    const publicaciones = await response.json();
+    todasLasPublicaciones = publicaciones;
+    publicacionesFiltradas = [...publicaciones];
+    
+    mostrarPublicaciones(publicaciones);
+    cargarOpcionesBarriosPublicaciones();
+    
+  } catch (error) {
+    console.error('Error al cargar publicaciones:', error);
+    document.getElementById('publicacionesContainer').innerHTML = `
+      <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        Error al cargar las publicaciones: ${error.message}
+      </div>
+    `;
+  }
+}
+
+// Función para mostrar publicaciones
+function mostrarPublicaciones(publicaciones) {
+  const container = document.getElementById('publicacionesContainer');
+  
+  if (publicaciones.length === 0) {
+    container.innerHTML = `
+      <div class="alert alert-info">
+        <i class="bi bi-info-circle-fill"></i>
+        No hay publicaciones disponibles en este momento.
+      </div>
+    `;
+    return;
+  }
+  
+  const html = publicaciones.map(publicacion => `
+    <div class="col-12 mb-4">
+      <div class="card bg-dark border-secondary">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">${publicacion.titulo}</h5>
+          <div class="d-flex gap-2 align-items-center">
+            <span class="badge ${getBadgeClassForEstado(publicacion.estado)}">${getEstadoText(publicacion.estado)}</span>
+            <span class="badge bg-info">${publicacion.barrio}</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-text">${publicacion.descripcion}</p>
+          
+          <!-- Mostrar fotos si existen -->
+          ${(() => {
+            let fotos = [];
+            if (publicacion.fotos) {
+              if (typeof publicacion.fotos === 'string') {
+                try {
+                  fotos = JSON.parse(publicacion.fotos);
+                } catch (e) {
+                  fotos = [];
+                }
+              } else if (Array.isArray(publicacion.fotos)) {
+                fotos = publicacion.fotos;
+              }
+            }
+            
+            if (fotos.length > 0) {
+              return `
+                <div class="mt-3">
+                  <strong><i class="bi bi-camera"></i> Fotos del problema:</strong>
+                  <div class="d-flex flex-wrap gap-2 mt-2">
+                    ${fotos.slice(0, 3).map(foto => `
+                      <img src="${foto}" alt="Foto del problema" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: cover;" 
+                           onerror="this.style.display='none'">
+                    `).join('')}
+                    ${fotos.length > 3 ? `<span class="badge bg-info align-self-center">+${fotos.length - 3} más</span>` : ''}
+                  </div>
+                </div>
+              `;
+            }
+            return '';
+          })()}
+          
+          <div class="row mt-3">
+            <div class="col-md-6">
+              <strong><i class="bi bi-person"></i> Usuario:</strong> ${publicacion.usuario_nombre} ${publicacion.usuario_apellido}
+            </div>
+            <div class="col-md-6">
+              <strong><i class="bi bi-clock"></i> Horarios:</strong> ${publicacion.horarios_disponibles || 'No especificado'}
+            </div>
+          </div>
+          <div class="mt-2">
+            <small class="text-muted">
+              <i class="bi bi-calendar"></i> Publicado: ${new Date(publicacion.fecha_publicacion).toLocaleDateString('es-ES')}
+            </small>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-primary" onclick="verDetallesPublicacion(${publicacion.id})">
+            <i class="bi bi-eye"></i> Ver Detalles y Enviar Presupuesto
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  
+  container.innerHTML = `
+    <div class="row">
+      ${html}
+    </div>
+  `;
+}
+
+// Función para ver detalles de una publicación
+async function verDetallesPublicacion(publicacionId) {
+  try {
+    const response = await fetch(`http://localhost:3000/publicaciones/${publicacionId}`);
+    
+    if (!response.ok) {
+      throw new Error('Error al cargar detalles de la publicación');
+    }
+    
+    const publicacion = await response.json();
+    publicacionSeleccionada = publicacion;
+    
+    // Mostrar detalles en el modal
+    mostrarDetallesEnModal(publicacion);
+    
+    // Abrir modal
+    const modal = new bootstrap.Modal(document.getElementById('modalVerPublicacion'));
+    modal.show();
+    
+  } catch (error) {
+    console.error('Error al cargar detalles:', error);
+    alert('Error al cargar los detalles de la publicación');
+  }
+}
+
+// Función para mostrar detalles en el modal
+function mostrarDetallesEnModal(publicacion) {
+  const container = document.getElementById('detallesPublicacion');
+  
+  container.innerHTML = `
+    <div class="card bg-secondary">
+      <div class="card-header">
+        <h5 class="mb-0">${publicacion.titulo}</h5>
+      </div>
+      <div class="card-body">
+        <p><strong>Descripción:</strong></p>
+        <p>${publicacion.descripcion}</p>
+        
+        <!-- Mostrar fotos si existen -->
+        ${(() => {
+          let fotos = [];
+          if (publicacion.fotos) {
+            if (typeof publicacion.fotos === 'string') {
+              try {
+                fotos = JSON.parse(publicacion.fotos);
+              } catch (e) {
+                fotos = [];
+              }
+            } else if (Array.isArray(publicacion.fotos)) {
+              fotos = publicacion.fotos;
+            }
+          }
+          
+          if (fotos.length > 0) {
+            return `
+              <div class="mt-3">
+                <strong><i class="bi bi-camera"></i> Fotos del problema:</strong>
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                  ${fotos.map(foto => `
+                    <img src="${foto}" alt="Foto del problema" class="img-thumbnail" style="width: 120px; height: 120px; object-fit: cover; cursor: pointer;" 
+                         onerror="this.style.display='none'" onclick="ampliarImagen('${foto}')">
+                  `).join('')}
+                </div>
+              </div>
+            `;
+          }
+          return '';
+        })()}
+        
+        <div class="row mt-3">
+          <div class="col-md-6">
+            <p><strong><i class="bi bi-person"></i> Usuario:</strong> ${publicacion.usuario_nombre} ${publicacion.usuario_apellido}</p>
+            <p><strong><i class="bi bi-geo-alt"></i> Barrio:</strong> ${publicacion.barrio}</p>
+          </div>
+          <div class="col-md-6">
+            <p><strong><i class="bi bi-clock"></i> Horarios:</strong> ${publicacion.horarios_disponibles || 'No especificado'}</p>
+            <p><strong><i class="bi bi-calendar"></i> Fecha:</strong> ${new Date(publicacion.fecha_publicacion).toLocaleDateString('es-ES')}</p>
+          </div>
+        </div>
+        
+        <div class="mt-3">
+          <span class="badge ${getBadgeClassForEstado(publicacion.estado)} fs-6">${getEstadoText(publicacion.estado)}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Función para enviar presupuesto
+async function enviarPresupuesto() {
+  if (!publicacionSeleccionada) {
+    alert('Error: No hay publicación seleccionada');
+    return;
+  }
+  
+  const mensaje = document.getElementById('mensajePresupuesto').value.trim();
+  const monto = document.getElementById('montoPresupuesto').value;
+  
+  // Validaciones
+  if (!mensaje || !monto) {
+    alert('Por favor completa el mensaje y el monto del presupuesto');
+    return;
+  }
+  
+  const profesionalId = localStorage.getItem('usuarioId');
+  if (!profesionalId) {
+    alert('Error: No se encontró la sesión del profesional');
+    return;
+  }
+  
+  try {
+    const datosMensaje = {
+      publicacion_id: publicacionSeleccionada.id,
+      profesional_id: parseInt(profesionalId),
+      usuario_id: publicacionSeleccionada.usuario_id,
+      mensaje: mensaje,
+      presupuesto: parseFloat(monto)
+    };
+    
+    const response = await fetch('http://localhost:3000/mensajes', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(datosMensaje)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Error al enviar el presupuesto');
+    }
+    
+    const resultado = await response.json();
+    
+    // Mostrar éxito
+    alert('¡Presupuesto enviado exitosamente!');
+    
+    // Limpiar formulario
+    document.getElementById('formEnviarPresupuesto').reset();
+    
+    // Cerrar modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalVerPublicacion'));
+    modal.hide();
+    
+  } catch (error) {
+    console.error('Error al enviar presupuesto:', error);
+    alert('Error al enviar el presupuesto: ' + error.message);
+  }
+}
+
+// Función para cargar opciones de barrios en el filtro
+async function cargarOpcionesBarriosPublicaciones() {
+  try {
+    const response = await fetch('http://localhost:3000/publicaciones');
+    const publicaciones = await response.json();
+    
+    const barriosUnicos = [...new Set(publicaciones.map(p => p.barrio))].sort();
+    
+    const selectBarrio = document.getElementById('filtroBarrioPublicaciones');
+    
+    // Limpiar opciones existentes (excepto la primera)
+    selectBarrio.innerHTML = '<option value="">Todos los barrios</option>';
+    
+    // Agregar opciones de barrios
+    barriosUnicos.forEach(barrio => {
+      const option = document.createElement('option');
+      option.value = barrio;
+      option.textContent = barrio;
+      selectBarrio.appendChild(option);
+    });
+  } catch (error) {
+    console.error('Error al cargar barrios:', error);
+  }
+}
+
+// Función para filtrar publicaciones
+function filtrarPublicaciones() {
+  const filtroBarrio = document.getElementById('filtroBarrioPublicaciones').value;
+  const filtroEstado = document.getElementById('filtroEstadoPublicaciones').value;
+  const busqueda = document.getElementById('buscarPublicaciones').value.toLowerCase().trim();
+  
+  publicacionesFiltradas = todasLasPublicaciones.filter(publicacion => {
+    const coincideBarrio = !filtroBarrio || publicacion.barrio === filtroBarrio;
+    const coincideEstado = !filtroEstado || publicacion.estado === filtroEstado;
+    const coincideBusqueda = !busqueda || publicacion.titulo.toLowerCase().includes(busqueda);
+    
+    return coincideBarrio && coincideEstado && coincideBusqueda;
+  });
+  
+  mostrarPublicaciones(publicacionesFiltradas);
+}
+
+// Funciones auxiliares para badges
+function getBadgeClassForEstado(estado) {
+  switch (estado) {
+    case 'activa': return 'bg-success';
+    case 'en_proceso': return 'bg-warning';
+    case 'resuelta': return 'bg-info';
+    case 'cancelada': return 'bg-danger';
+    default: return 'bg-secondary';
+  }
+}
+
+function getEstadoText(estado) {
+  switch (estado) {
+    case 'activa': return 'Activa';
+    case 'en_proceso': return 'En Proceso';
+    case 'resuelta': return 'Resuelta';
+    case 'cancelada': return 'Cancelada';
+    default: return estado;
+  }
+}
+
+// Función para ampliar imagen
+function ampliarImagen(src) {
+  document.getElementById('imagenAmpliada').src = src;
+  const modal = new bootstrap.Modal(document.getElementById('modalAmpliarImagen'));
+  modal.show();
+}
+
+// Funciones de acciones (placeholder)
 function configuracion() {
   alert('Función de configuración - Se implementará más adelante');
 }
@@ -290,9 +833,260 @@ document.getElementById('formEditarPerfil').addEventListener('submit', async (e)
   ocultarEdicion();
 });
 
-// Cargar perfil cuando la página se carga
+// ===== FUNCIONES PARA TRABAJOS EN SEGUIMIENTO =====
+
+// Función para cargar trabajos en seguimiento
+async function cargarTrabajosEnSeguimiento() {
+  const loading = document.getElementById('loadingTrabajos');
+  const error = document.getElementById('errorTrabajos');
+  const container = document.getElementById('trabajosContainer');
+  const sinTrabajos = document.getElementById('sinTrabajos');
+  
+  try {
+    // Mostrar loading
+    loading.style.display = 'block';
+    error.style.display = 'none';
+    sinTrabajos.style.display = 'none';
+    container.innerHTML = '';
+
+    const profesionalId = localStorage.getItem('usuarioId');
+    
+    // Obtener mensajes aceptados del profesional
+    const response = await fetch(`http://localhost:3000/mensajes/profesional/${profesionalId}`);
+    
+    if (!response.ok) {
+      throw new Error('Error al cargar trabajos');
+    }
+    
+    const mensajes = await response.json();
+    
+    // Filtrar solo mensajes aceptados
+    const mensajesAceptados = mensajes.filter(mensaje => mensaje.estado === 'aceptado');
+    
+    // Obtener publicaciones de los mensajes aceptados
+    const publicacionesIds = [...new Set(mensajesAceptados.map(m => m.publicacion_id))];
+    
+    if (publicacionesIds.length === 0) {
+      loading.style.display = 'none';
+      sinTrabajos.style.display = 'block';
+      return;
+    }
+    
+    // Obtener detalles de las publicaciones
+    const publicacionesPromises = publicacionesIds.map(id => 
+      fetch(`http://localhost:3000/publicaciones/${id}`).then(r => r.json())
+    );
+    
+    const publicaciones = await Promise.all(publicacionesPromises);
+    
+    // Ocultar loading
+    loading.style.display = 'none';
+    
+    // Mostrar trabajos
+    mostrarTrabajosEnSeguimiento(publicaciones, mensajesAceptados);
+
+  } catch (err) {
+    console.error('Error al cargar trabajos:', err);
+    loading.style.display = 'none';
+    error.style.display = 'block';
+  }
+}
+
+// Función para mostrar trabajos en seguimiento
+function mostrarTrabajosEnSeguimiento(publicaciones, mensajesAceptados) {
+  const container = document.getElementById('trabajosContainer');
+  
+  const html = publicaciones.map(publicacion => {
+    // Encontrar el mensaje aceptado para esta publicación
+    const mensajeAceptado = mensajesAceptados.find(m => m.publicacion_id == publicacion.id);
+    
+    return `
+      <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card card-trabajo">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <h6 class="card-title mb-0 text-truncate" style="max-width: 200px;">
+                ${publicacion.titulo}
+              </h6>
+              <span class="badge bg-success">
+                En Progreso
+              </span>
+            </div>
+            
+            <p class="card-text text-muted small mb-3" style="height: 40px; overflow: hidden;">
+              ${publicacion.descripcion.length > 80 ? 
+                publicacion.descripcion.substring(0, 80) + '...' : 
+                publicacion.descripcion}
+            </p>
+            
+            <!-- Mostrar primera foto si existe -->
+            ${(() => {
+              let fotos = [];
+              if (publicacion.fotos) {
+                if (typeof publicacion.fotos === 'string') {
+                  try {
+                    fotos = JSON.parse(publicacion.fotos);
+                  } catch (e) {
+                    fotos = [];
+                  }
+                } else if (Array.isArray(publicacion.fotos)) {
+                  fotos = publicacion.fotos;
+                }
+              }
+              
+              if (fotos.length > 0) {
+                return `
+                  <div class="mb-3">
+                    <img src="${fotos[0]}" alt="Foto del problema" class="trabajo-img" 
+                         onerror="this.style.display='none'">
+                    ${fotos.length > 1 ? `<span class="badge bg-secondary ms-2">+${fotos.length - 1} más</span>` : ''}
+                  </div>
+                `;
+              }
+              return '';
+            })()}
+            
+            <div class="row small text-muted mb-3">
+              <div class="col-12 mb-1">
+                <i class="bi bi-geo-alt"></i> ${publicacion.barrio}
+              </div>
+              <div class="col-12 mb-1">
+                <i class="bi bi-clock"></i> ${publicacion.horarios_disponibles || 'No especificado'}
+              </div>
+              <div class="col-12">
+                <i class="bi bi-calendar"></i> 
+                ${new Date(publicacion.fecha_publicacion).toLocaleDateString('es-ES')}
+              </div>
+            </div>
+            
+            ${mensajeAceptado ? `
+              <div class="alert alert-success p-2 mb-3">
+                <small>
+                  <i class="bi bi-check-circle"></i> 
+                  <strong>Presupuesto aceptado:</strong> $${mensajeAceptado.presupuesto || 'No especificado'}
+                </small>
+              </div>
+            ` : ''}
+            
+            <div class="d-grid gap-2">
+              <button class="btn btn-success btn-sm" onclick="verDetallesTrabajo(${publicacion.id})">
+                <i class="bi bi-eye"></i> Ver Detalles
+              </button>
+              <button class="btn btn-outline-warning btn-sm" onclick="marcarCompletado(${publicacion.id})">
+                <i class="bi bi-check-circle"></i> Marcar Completado
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  container.innerHTML = html;
+}
+
+// Función para ver detalles del trabajo
+function verDetallesTrabajo(publicacionId) {
+  // Usar la función existente para ver detalles
+  verDetallesPublicacion(publicacionId);
+}
+
+// Función para marcar trabajo como completado
+async function marcarCompletado(publicacionId) {
+  if (!confirm('¿Estás seguro de que quieres marcar este trabajo como completado?')) {
+    return;
+  }
+  
+  try {
+    const response = await fetch(`http://localhost:3000/publicaciones/${publicacionId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ estado: 'completada' })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Error al actualizar estado');
+    }
+    
+    alert('Trabajo marcado como completado exitosamente');
+    
+    // Recargar trabajos en seguimiento
+    cargarTrabajosEnSeguimiento();
+    
+  } catch (error) {
+    console.error('Error al marcar como completado:', error);
+    alert('Error al marcar como completado: ' + error.message);
+  }
+}
+
+// ===== FUNCIONES DE NAVEGACIÓN MEJORADAS =====
+
+// Función mejorada para volver al perfil
+function volverAlPerfil() {
+  // Ocultar todas las secciones específicas
+  const seccionesEspecificas = document.querySelectorAll('#edicionPerfil, #seccionPublicaciones, #seccionConfiguracion');
+  seccionesEspecificas.forEach(seccion => {
+    seccion.style.display = 'none';
+  });
+  
+  // Mostrar sección principal del perfil
+  const seccionPrincipal = document.querySelector('main > div:not(#edicionPerfil):not(#seccionPublicaciones):not(#seccionConfiguracion)');
+  if (seccionPrincipal) {
+    seccionPrincipal.style.display = 'block';
+  }
+  
+  // Recargar trabajos en seguimiento
+  cargarTrabajosEnSeguimiento();
+}
+
+// Función mejorada para mostrar edición
+function mostrarEdicion() {
+  // Ocultar sección principal
+  const seccionPrincipal = document.querySelector('main > div:not(#edicionPerfil):not(#seccionPublicaciones):not(#seccionConfiguracion)');
+  if (seccionPrincipal) {
+    seccionPrincipal.style.display = 'none';
+  }
+  
+  // Mostrar formulario de edición
+  document.getElementById('edicionPerfil').style.display = 'block';
+}
+
+// Función mejorada para ocultar edición
+function ocultarEdicion() {
+  document.getElementById('edicionPerfil').style.display = 'none';
+  
+  // Volver al perfil principal
+  volverAlPerfil();
+}
+
+// Función mejorada para ver publicaciones
+function verPublicaciones() {
+  // Ocultar sección principal
+  const seccionPrincipal = document.querySelector('main > div:not(#edicionPerfil):not(#seccionPublicaciones):not(#seccionConfiguracion)');
+  if (seccionPrincipal) {
+    seccionPrincipal.style.display = 'none';
+  }
+  
+  // Mostrar sección de publicaciones
+  document.getElementById('seccionPublicaciones').style.display = 'block';
+  
+  // Cargar publicaciones
+  cargarPublicaciones();
+}
+
+// Función mejorada para configuración
+function configuracion() {
+  // Por ahora mostrar alerta, pero preparado para implementar
+  alert('Función de configuración - Se implementará más adelante');
+  // Aquí se podría agregar una sección de configuración similar a las otras
+}
+
+// Cargar perfil y trabajos cuando la página se carga
 document.addEventListener('DOMContentLoaded', function() {
   cargarPerfil();
+  cargarTrabajosEnSeguimiento();
 });
 </script>
 
